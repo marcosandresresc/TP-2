@@ -1,0 +1,68 @@
+P: cantidad total de usuarios
+nb: cantidad de transacciones en el bloque
+
+Blockchain..............................ArrayList<Bloque> o ListaEnlazada<Bloque>
+Accedo al último bloque en O(1).
+
+Transacciones..............................ArrayList<Transaccion> ordenadas por id y  MaxHeap<Transaccion> ordenadas por monto.
+El heap es para txMayorValorUltimoBloque y hackearTx.
+
+Usuarios..............................ArrayList<Usuario>
+Todos los usuarios del sistema, acceso por id O(1).
+Preguntar: porque ArrayList es O(1) es O(1) 'amortizado'?
+
+Tenedores..............................AVL<Usuario> ordenado por id	Usuarios con saldo > 0
+Busco e inserto en O(log P).
+
+Creadores..............................Array<Usuario>(3000)
+No lo uso realmente salvo que quiera comparar que el creador efectivamente sea correcto, pero ya está en el requiere del proc...
+
+Máximo Tenedor..............................Variable Precalcualda. 
+Lo actualizo en agregarBloque, por ende lo tengo en O(1).
+
+1. nuevoBerretacoin(in n usuarios: Z): $Berretacoin O(P)
+Inicializa al sistema de criptomonedas con usuarios numerados de 1 a n usuarios
+- Creo blockchain vacía.
+- Inicializo usuarios de 0/1...n_usuarios - 1(el 0 cuenta?) en (id: i, saldo: 0).
+- Tenedores, creadores, heap y demás estructuras se inician vacíos.
+
+2. agregarBloque(inout berretacoin: $Berretacoin, in transacciones: seq<Transaccion>) O(nb ∗ log P)
+Agrega un nuevo bloque con la secuencia de transacciones, que vienen ordenadas por su identificador, a la cadena de
+bloques.
+
+- Recorro las transacciones O(nb):
+    - Inserto en ArrayList<Transaccion> para mantener el orden por id en O(1).
+    - Inserto la transacción en el heap en O(log nb).
+    - Accedo al comprador y vendedor desde Usuarios en O(1) y modifico sus saldos en O(1).
+    - Si el nuevo saldo > 0 y no está en tenedores lo inserto en AVL<Usuario> en O(log P).
+    - Si ya estaba en tenedores, lo busco y actualizo en O(log P).
+    - Voy calculando el nuevo maximoTenedor en O(1).
+    - Voy calculando el montoAcumulado en O(1).
+
+    Pregunta: Si tengo O(nb) * (O(log nb) + 2O(log P)) = O(nb * log P) ??
+
+3. txMayorValorUltimoBloque(in berretacoin: $Berretacoin): Z O(1)
+Devuelve la transaccion de mayor valor del ultimo bloque (sin extraerla). En caso de empate, devuelve aquella de mayor id.
+- Accedo directo del heap en O(1).
+
+4. txUltimoBloque(in berretacoin: $Berretacoin): seq<Transaccion> O(nb)
+Devuelve una copia de la secuencia de transacciones del ultimo bloque, ordenadas por su identificador.
+- La obtengo en O(1) gracias a la lista enlazada y el O(nb) es al copiarla.
+
+5. maximoTenedor(in berretacoin: $Berretacoin): Z O(1)
+Devuelve al usuario que posee la mayor cantidad de $Berretacoin. En caso de empate, devuelve aquel de menor id.
+- Variable precalculada en agregar bloque. O(1).
+
+6. montoMedioUltimoBloque(in berretacoin: $Berretacoin): Z O(1)
+Devuelve el monto promedio de todas las transacciones en el ultimo bloque de la cadena, sin considerar las ”transacciones
+de creacion”. En caso de que no haya transacciones, devuelve 0.
+- Variable precalculada en agregar bloque. O(1).
+
+7. hackearTx(inout berretacoin: $Berretacoin): O(log nb + log P)
+Extrae del ultimo bloque de la cadena la transaccion de mayor monto. No importa si despu´es de la extracci´on queda
+una transaccion dentro del bloque donde el comprador no tiene fondos suficientes.
+- Extraigo la transacción de mayor monto del heap O(log nb) porque tengo que actualizar el heap...
+- Accedo a comprador y vendedor en tenedores O(log P) y actualizo.
+
+Podría tener un handle en el heap de transacciones para acceder directo a los compradores y vendedores de la misma?
+Que pasa si la transaccion es de creación? 
