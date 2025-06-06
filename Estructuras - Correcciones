@@ -1,0 +1,60 @@
+P: cantidad total de usuarios
+nb: cantidad de transacciones en el bloque
+
+Blockchain..............................ListaEnlazada<Bloque>
+Accedo al último bloque en O(1). Agrego funcion obtenerUltimo (encapsulamiento? ok)
+
+Transacciones..............................ListaEnlazada<Transaccion> ordenadas por id.
+             ..............................MaxHeap<Transaccion> ordenadas por monto.
+El heap es para txMayorValorUltimoBloque y hackearTx.
+
+Usuarios..............................ArrayList<Usuario>
+Todos los usuarios del sistema, acceso por id O(1).
+
+Tenedores..............................MaxHeap<Usuario> ordenado por monto desempata id.
+Busco e inserto en O(log P).
+
+Máximo Tenedor..............................Variable Precalcualda.
+Lo actualizo en agregarBloque, por ende lo tengo en O(1).
+
+1. nuevoBerretacoin(in n_usuarios : Z) : $Berretacoin O(P)
+Inicializa al sistema de criptomonedas con usuarios numerados de 1 a n_usuarios.
+    - Creo blockchain vacía.
+    - Inicializo usuarios de 1...n_usuarios (id: i, saldo: 0).
+    - MaxHeap<Usuario>.
+    - Creo el Handle hacia los usuarios.
+    Cuidado que no se inserte en O(logP)
+
+2. agregarBloque(inout berretacoin: $Berretacoin, in transacciones: seq<Transaccion>) O(nb ∗ log P)
+Agrega un nuevo bloque con la secuencia de transacciones, que vienen ordenadas por su identificador, a la cadena de
+bloques.
+    - Creo bloque.
+    - Recorro las transacciones O(nb):
+    - Inserto en ArrayList<Transaccion> para mantener el orden por id en O(1).
+        - Creo el Handle hacia las transacciones.
+        - Heapifico el MaxHeap despues del bucle.
+        - Modifco en MaxHeap<Usuario> O(logP) via handle.  
+        - Voy calculando el montoAcumulado en O(1) para el montoMedio después.
+
+3. txMayorValorUltimoBloque(in berretacoin: $Berretacoin): Z O(1)
+Devuelve la transaccion de mayor valor del ultimo bloque (sin extraerla). En caso de empate, devuelve aquella de mayor id.
+    - Accedo directo al ultimo bloque O(1) y en él accedo a la tx de mayor monto en MaxHeap<Transaccion> también O(1).
+
+4. txUltimoBloque(in berretacoin: $Berretacoin): seq<Transaccion> O(nb)
+Devuelve una copia de la secuencia de transacciones del ultimo bloque, ordenadas por su identificador.
+    - La obtengo en O(1) gracias a la lista enlazada y el O(nb) es al copiarla.
+
+5. maximoTenedor(in berretacoin: $Berretacoin): Z O(1)
+Devuelve al usuario que posee la mayor cantidad de $Berretacoin. En caso de empate, devuelve aquel de menor id.
+    - Via MaxHeap<Usuario>.
+
+6. montoMedioUltimoBloque(in berretacoin: $Berretacoin): Z O(1)
+Devuelve el monto promedio de todas las transacciones en el ultimo bloque de la cadena, sin considerar las ”transacciones
+de creacion”. En caso de que no haya transacciones, devuelve 0.
+    - Variable precalculada en agregar bloque O(1).
+
+7. hackearTx(inout berretacoin: $Berretacoin): O(log nb + log P)
+Extrae del ultimo bloque de la cadena la transaccion de mayor monto. No importa si despu´es de la extracci´on queda
+una transaccion dentro del bloque donde el comprador no tiene fondos suficientes.
+    - Extraigo la transacción de mayor monto del heap O(log nb) porque tengo que actualizar el heap...
+    - Accedo a comprador y vendedor en tenedores O(log P) y actualizo.
